@@ -38,9 +38,9 @@ var Process = (function (_EventEmitter) {
 
         _get(Object.getPrototypeOf(Process.prototype), 'constructor', this).call(this);
         this.id = (0, _uid2['default'])();
-        this.settings = Object.assign({
-            stream: true
-        }, settings);
+        this.settings = {
+            stream: settings.stream || true
+        };
 
         // The command that is executed.
         this.command = null;

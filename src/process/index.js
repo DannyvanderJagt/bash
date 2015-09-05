@@ -8,9 +8,9 @@ class Process extends EventEmitter{
     constructor(settings){
         super();
         this.id = uid();
-        this.settings = Object.assign({
-            stream: true
-        }, settings);
+        this.settings = {
+            stream: settings.stream || true
+        };
         
         // The command that is executed.
         this.command = null;
