@@ -11,6 +11,6 @@
   "author": "Danny van der Jagt <dannyvanderjagt@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "combined-stream": "^1.0.5"
+    "uid": "dannyvanderjagt/uid"
   }
 }
