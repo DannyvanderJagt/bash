@@ -15,6 +15,7 @@ class Process extends EventEmitter{
         // The command that is executed.
         this.command = null;
         this.queue = [];
+        this.available = false;
 
         // Create a new bash.
         this.shell = spawn('bash');
@@ -27,6 +28,22 @@ class Process extends EventEmitter{
         this.shell.on('SIGTERM', this._onExit);
         
         this.emit('created');
+        this._setAvailable(true);
+    }
+    _setAvailable(state){
+        if(this.available === state){
+            return false;
+        }
+        
+        this.available = state;
+        if(state === true){
+            this.emit('available');
+        }else if(state === false){
+            this.emit('unavailable');
+        }
+    }
+    isAvailable(){
+        return this.command ? false : true;
     }
     exec(command, callback){
         if(util.isArray(command)){
@@ -45,6 +62,7 @@ class Process extends EventEmitter{
         }
         
         // Create the command.
+        this._setAvailable(false);
         this.command = new Command(command);
         
         if(command){
@@ -61,6 +79,7 @@ class Process extends EventEmitter{
     }
     checkQueue(){
         if(this.queue.length === 0){
+            this._setAvailable(true);
             return false;
         }
         let command = this.queue[0];
@@ -84,7 +103,9 @@ class Process extends EventEmitter{
                 return false;
             }
         
-            this.command.addToResult(line);
+            if(this.command){
+                this.command.addToResult(line);
+            }
             
             if(this.settings.stream){
                 this.emit('data', line);
