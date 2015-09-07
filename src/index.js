@@ -28,7 +28,7 @@ let BashCenter = {
      * @param  {Object} settings - The settings for the new process.
      * @return {Object} Project
      */
-    create(settings){
+    create(settings = {}){
         let pr = new Process(settings);
         this._processes[pr.id] = pr; 
         return pr;
@@ -76,6 +76,20 @@ let BashCenter = {
 };
 
 export default BashCenter;
+
+
+let p1 = BashCenter.create();
+p1.on('pid', (pid)=>{
+    console.log('pid', pid);
+});
+p1.on('finished', (command)=>{
+    console.log('command', command, p1.shell.pid);
+});
+p1.on('error', (command)=>{
+    console.log('error', command);
+});
+
+p1.exec('node ./build/index.js');
 
 /* 
     Kill all the process when the node process exists

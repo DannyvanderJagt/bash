@@ -1,7 +1,8 @@
 import uid from 'uid';
 import util from 'util';
+import {EventEmitter} from 'events';
 
-class Command{
+class Command extends EventEmitter{
     /**
      * Constructor
      * @private
@@ -9,7 +10,9 @@ class Command{
      * @param  {String} command - The bash command.
      */
     constructor(command){
+        super();
         this.id = uid();
+        this.pid = null;
         
         this.executing = false;
         
@@ -38,8 +41,8 @@ class Command{
      */
     _create(command){
         return [
-            'echo start',
-            command, 
+            'echo start:$$',
+            command,
             'sleep .1', // A hack to enable to end statement.
             'echo end \n',
         ].join(' && ');
@@ -53,6 +56,7 @@ class Command{
     start(){
         this.executing = true;
         this.startTime = new Date().getTime();
+        this.emit('start');
     }
     
     /**
@@ -73,6 +77,7 @@ class Command{
                 }
             });
         }
+        this.emit('end');
     }
     
     /**
@@ -84,7 +89,14 @@ class Command{
         if(!line){
             return false;
         }
-        if(line === 'start'){
+        
+        // Get the process id.
+        if(line.match(/start\:[0-9]*/)){
+            let pid = line.match(/start\:([0-9]*)/);
+            if(pid && pid[1]){
+                this.pid = pid[1];
+                this.emit('pid', this.pid);
+            }
             this.start();
             return false;
         }
@@ -149,6 +161,7 @@ class Command{
             error: this.error,
             result: this.result,
             id: this.id,
+            pid: this.pid,
             command: this.command,
             executedCommand: this.executingLine,
             startTime: this.startTime,
