@@ -30,8 +30,20 @@ var _util = require('util');
 
 var _util2 = _interopRequireDefault(_util);
 
+/**
+ * Process
+ * @namespace process
+ */
+
 var Process = (function (_EventEmitter) {
     _inherits(Process, _EventEmitter);
+
+    /**
+     * Constructor
+     * @private
+     * @name constructor
+     * @param  {Object} settings - The settings.
+     */
 
     function Process(settings) {
         _classCallCheck(this, Process);
@@ -61,6 +73,13 @@ var Process = (function (_EventEmitter) {
         this._setAvailable(true);
     }
 
+    /**
+     * Set the availablity of this process.
+     * @private
+     * @name _setAvailable
+     * @param {[type]} state [description]
+     */
+
     _createClass(Process, [{
         key: '_setAvailable',
         value: function _setAvailable(state) {
@@ -75,11 +94,23 @@ var Process = (function (_EventEmitter) {
                 this.emit('unavailable');
             }
         }
+
+        /**
+         * Return the availablity of this process.
+         * @return {Boolean}
+         */
     }, {
         key: 'isAvailable',
         value: function isAvailable() {
             return this.command ? false : true;
         }
+
+        /**
+         * Execute a command.
+         * @name exec
+         * @param  {String}   command  - The bash command.
+         * @param  ?{Function} callback - The callback.
+         */
     }, {
         key: 'exec',
         value: function exec(command, callback) {
@@ -92,7 +123,7 @@ var Process = (function (_EventEmitter) {
                 return false;
             }
             if (this.command) {
-                this.addToQueue(command, callback);
+                this._addToQueue(command, callback);
                 return false;
             }
             if (!command) {
@@ -113,14 +144,28 @@ var Process = (function (_EventEmitter) {
             // Execute the command.
             this.shell.stdin.write(this.command.executingLine);
         }
+
+        /**
+         * Add a command to the waiting queue.
+         * @private
+         * @name _addToQueue
+         * @param {String}   command  - The bash command.
+         * @param {Function} callback - The callback.
+         */
     }, {
-        key: 'addToQueue',
-        value: function addToQueue(command, callback) {
+        key: '_addToQueue',
+        value: function _addToQueue(command, callback) {
             this.queue.push([command, callback]);
         }
+
+        /**
+         * Check the waiting queue for commands.
+         * @private
+         * @name _checkQueue
+         */
     }, {
-        key: 'checkQueue',
-        value: function checkQueue() {
+        key: '_checkQueue',
+        value: function _checkQueue() {
             if (this.queue.length === 0) {
                 this._setAvailable(true);
                 return false;
@@ -129,6 +174,13 @@ var Process = (function (_EventEmitter) {
             this.queue.shift();
             this.exec(command[0], command[1]);
         }
+
+        /**
+         * Process the data that we received from the bash process.
+         * @private
+         * @name _onData
+         * @param  {Buffer} data - Buffer data from the bash process.
+         */
     }, {
         key: '_onData',
         value: function _onData(data) {
@@ -146,7 +198,7 @@ var Process = (function (_EventEmitter) {
                     _this2.command.end();
                     _this2.emit('finished', _this2.command.getOutput());
                     _this2.command = null;
-                    _this2.checkQueue();
+                    _this2._checkQueue();
                     return false;
                 }
 
@@ -159,6 +211,13 @@ var Process = (function (_EventEmitter) {
                 }
             });
         }
+
+        /**
+         * Process error from the bash process.
+         * @private
+         * @name _onCommandError
+         * @param  {Buffer} data - Buffer data from the bash process.
+         */
     }, {
         key: '_onCommandError',
         value: function _onCommandError(data) {
@@ -166,16 +225,37 @@ var Process = (function (_EventEmitter) {
             this.command.addError(error);
             this.emit('error', error, this.command.getOutput());
         }
+
+        /**
+         * Handle the bash process end event.
+         * @private
+         * @name _onEnd
+         * @function
+         */
     }, {
         key: '_onEnd',
         value: function _onEnd() {
             this.emit('end');
         }
+
+        /**
+         * Handle the bash process exit event.
+         * @private
+         * @name _onExit
+         * @param  {String} code - The exit code.
+         */
     }, {
         key: '_onExit',
         value: function _onExit(code) {
             this.emit('exit', code);
         }
+
+        /**
+         * Kill this process.
+         * @private
+         * @name kill
+         * @function
+         */
     }, {
         key: 'kill',
         value: function kill() {
