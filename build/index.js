@@ -99,19 +99,6 @@ var BashCenter = {
 
 exports['default'] = BashCenter;
 
-var p1 = BashCenter.create();
-p1.on('pid', function (pid) {
-    console.log('pid', pid);
-});
-p1.on('finished', function (command) {
-    console.log('command', command, p1.shell.pid);
-});
-p1.on('error', function (command) {
-    console.log('error', command);
-});
-
-p1.exec('node ./build/index.js');
-
 /* 
     Kill all the process when the node process exists
     to prevent useless running processes.
