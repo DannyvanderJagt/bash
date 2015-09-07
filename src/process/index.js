@@ -4,7 +4,18 @@ import Command from '../command';
 import uid from 'uid';
 import util from 'util';
 
+/**
+ * Process
+ * @namespace process
+ */
 class Process extends EventEmitter{
+    
+    /**
+     * Constructor
+     * @private
+     * @name constructor
+     * @param  {Object} settings - The settings.
+     */
     constructor(settings){
         super();
         this.id = uid();
@@ -30,6 +41,13 @@ class Process extends EventEmitter{
         this.emit('created');
         this._setAvailable(true);
     }
+    
+    /**
+     * Set the availablity of this process.
+     * @private
+     * @name _setAvailable
+     * @param {[type]} state [description]
+     */
     _setAvailable(state){
         if(this.available === state){
             return false;
@@ -42,9 +60,21 @@ class Process extends EventEmitter{
             this.emit('unavailable');
         }
     }
+    
+    /**
+     * Return the availablity of this process.
+     * @return {Boolean}
+     */
     isAvailable(){
         return this.command ? false : true;
     }
+    
+    /**
+     * Execute a command.
+     * @name exec
+     * @param  {String}   command  - The bash command.
+     * @param  ?{Function} callback - The callback.
+     */
     exec(command, callback){
         if(util.isArray(command)){
             command.forEach((command) => {
@@ -53,7 +83,7 @@ class Process extends EventEmitter{
             return false;
         }
         if(this.command){
-            this.addToQueue(command, callback);
+            this._addToQueue(command, callback);
             return false;
         }
         if(!command){
@@ -74,10 +104,24 @@ class Process extends EventEmitter{
         // Execute the command.
         this.shell.stdin.write(this.command.executingLine);
     }
-    addToQueue(command, callback){
+    
+    /**
+     * Add a command to the waiting queue.
+     * @private
+     * @name _addToQueue
+     * @param {String}   command  - The bash command.
+     * @param {Function} callback - The callback.
+     */
+    _addToQueue(command, callback){
         this.queue.push([command, callback]);
     }
-    checkQueue(){
+    
+    /**
+     * Check the waiting queue for commands.
+     * @private
+     * @name _checkQueue
+     */
+    _checkQueue(){
         if(this.queue.length === 0){
             this._setAvailable(true);
             return false;
@@ -86,6 +130,13 @@ class Process extends EventEmitter{
         this.queue.shift();
         this.exec(command[0], command[1]);
     }
+    
+    /**
+     * Process the data that we received from the bash process.
+     * @private
+     * @name _onData
+     * @param  {Buffer} data - Buffer data from the bash process.
+     */
     _onData(data){
         // Convert data from buffer to string.
         data = data.toString();
@@ -99,7 +150,7 @@ class Process extends EventEmitter{
                 this.command.end();
                 this.emit('finished', this.command.getOutput());
                 this.command = null;
-                this.checkQueue();
+                this._checkQueue();
                 return false;
             }
         
@@ -112,17 +163,45 @@ class Process extends EventEmitter{
             }
         });
     }
+    
+    /**
+     * Process error from the bash process.
+     * @private
+     * @name _onCommandError
+     * @param  {Buffer} data - Buffer data from the bash process.
+     */
     _onCommandError(data){
         let error = data.toString();
         this.command.addError(error);
         this.emit('error', error, this.command.getOutput());
     }
+    
+    /**
+     * Handle the bash process end event.
+     * @private
+     * @name _onEnd
+     * @function
+     */
     _onEnd(){
         this.emit('end');
     }
+    
+    /**
+     * Handle the bash process exit event.
+     * @private
+     * @name _onExit
+     * @param  {String} code - The exit code.
+     */
     _onExit(code){
         this.emit('exit', code);
     }
+    
+    /**
+     * Kill this process.
+     * @private
+     * @name kill
+     * @function
+     */
     kill(){
         this.shell.kill('SIGHUP');
         this.emit('killed');

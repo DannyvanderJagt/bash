@@ -2,6 +2,12 @@ import uid from 'uid';
 import util from 'util';
 
 class Command{
+    /**
+     * Constructor
+     * @private
+     * @name constructor
+     * @param  {String} command - The bash command.
+     */
     constructor(command){
         this.id = uid();
         
@@ -16,27 +22,44 @@ class Command{
         this.endTime = null;
     
         // Create the command.
-        this.executingLine = this.create();
+        this.executingLine = this._create(this.command);
         
         if(!this.command){
             this.executingLine = 'echo start && echo end \n';
-            return false;
         }
     }
-    create(){
+    
+    /**
+     * Create the executable command.
+     * @private
+     * @name _create
+     * @param {String} comamnd - The bash command.
+     * @return {String} The executable command.
+     */
+    _create(command){
         return [
-            'echo start',//['+this.id+']',
-            this.command, 
+            'echo start',
+            command, 
             'sleep .1', // A hack to enable to end statement.
-            'echo end \n',//['+this.id+']\n',
+            'echo end \n',
         ].join(' && ');
     }
-    // The command has started executing.
+    
+    /**
+     * Let this instance know that the command is executing.
+     * @name start
+     * @function
+     */
     start(){
         this.executing = true;
         this.startTime = new Date().getTime();
     }
-    // The command is finished with executing.
+    
+    /**
+     * Let this instance know that the command is done with executing.
+     * @name end
+     * @function
+     */
     end(){
         if(!this.executing){
             return false;
@@ -51,7 +74,12 @@ class Command{
             });
         }
     }
-    // Add a line to the command results.
+    
+    /**
+     * Add a line to the command results.
+     * @name addToResult
+     * @param {String} line - A line of the results.
+     */
     addToResult(line){
         if(!line){
             return false;
@@ -69,26 +97,53 @@ class Command{
         }
         this.result.push(line);
     }
-    // Get all the results.
+    
+    /**
+     * Get all the results.
+     * @name getResult
+     * @return {Array} All the results line by line.
+     */
     getResult(){
         return this._result;
     }
-    // 
+    
+    /**
+     * Let this is know that there was an error executing this command.
+     * @name addError
+     * @param {String} error - The error.
+     */
     addError(error){
         let lines = error.split(/\n/g);
         lines.forEach((line)=>{
             this.error.push(line);
         });
     }
+    
+    /**
+     * Get the executable command.
+     * @getExecutingLine
+     * @return {String} The executable command.
+     */
     getExecutingLine(){
         return this._executingLine;
     }
+    
+    /**
+     * Add a callback to this command.
+     * @name addCallback
+     * @param {Function} callback - The callback.
+     */
     addCallback(callback){
         if(!util.isFunction(callback)){
             return false;
         }
         this.callback.push(callback);
     }
+    
+    /**
+     * Get the output/total results of this command.
+     * @return {Object} The results.
+     */
     getOutput(){
         return {
             error: this.error,
