@@ -60,7 +60,7 @@ var Process = (function (_EventEmitter) {
         this.available = false;
 
         // Create a new bash.
-        this.shell = (0, _child_process.spawn)('bash');
+        this.shell = (0, _child_process.spawn)('bash', { detached: true });
 
         // Listen for all the events.
         this.shell.stderr.on('data', this._onCommandError.bind(this));
@@ -135,13 +135,15 @@ var Process = (function (_EventEmitter) {
             this._setAvailable(false);
             this.command = new _command2['default'](command);
 
-            if (command) {
+            if (callback) {
                 this.command.addCallback(callback);
             }
 
-            this.emit('executing', command);
+            // Chain the pid event.
+            this.command.on('pid', this.emit.bind(this, 'pid'));
 
             // Execute the command.
+            this.emit('executing', command);
             this.shell.stdin.write(this.command.executingLine);
         }
 

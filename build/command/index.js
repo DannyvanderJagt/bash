@@ -6,9 +6,13 @@ Object.defineProperty(exports, '__esModule', {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _uid = require('uid');
 
@@ -18,7 +22,11 @@ var _util = require('util');
 
 var _util2 = _interopRequireDefault(_util);
 
-var Command = (function () {
+var _events = require('events');
+
+var Command = (function (_EventEmitter) {
+    _inherits(Command, _EventEmitter);
+
     /**
      * Constructor
      * @private
@@ -29,7 +37,9 @@ var Command = (function () {
     function Command(command) {
         _classCallCheck(this, Command);
 
+        _get(Object.getPrototypeOf(Command.prototype), 'constructor', this).call(this);
         this.id = (0, _uid2['default'])();
+        this.pid = null;
 
         this.executing = false;
 
@@ -60,7 +70,7 @@ var Command = (function () {
     _createClass(Command, [{
         key: '_create',
         value: function _create(command) {
-            return ['echo start', command, 'sleep .1', // A hack to enable to end statement.
+            return ['echo start:$$', command, 'sleep .1', // A hack to enable to end statement.
             'echo end \n'].join(' && ');
         }
 
@@ -74,6 +84,7 @@ var Command = (function () {
         value: function start() {
             this.executing = true;
             this.startTime = new Date().getTime();
+            this.emit('start');
         }
 
         /**
@@ -98,6 +109,7 @@ var Command = (function () {
                     }
                 });
             }
+            this.emit('end');
         }
 
         /**
@@ -111,7 +123,14 @@ var Command = (function () {
             if (!line) {
                 return false;
             }
-            if (line === 'start') {
+
+            // Get the process id.
+            if (line.match(/start\:[0-9]*/)) {
+                var pid = line.match(/start\:([0-9]*)/);
+                if (pid && pid[1]) {
+                    this.pid = pid[1];
+                    this.emit('pid', this.pid);
+                }
                 this.start();
                 return false;
             }
@@ -188,6 +207,7 @@ var Command = (function () {
                 error: this.error,
                 result: this.result,
                 id: this.id,
+                pid: this.pid,
                 command: this.command,
                 executedCommand: this.executingLine,
                 startTime: this.startTime,
@@ -198,7 +218,7 @@ var Command = (function () {
     }]);
 
     return Command;
-})();
+})(_events.EventEmitter);
 
 exports['default'] = Command;
 module.exports = exports['default'];
