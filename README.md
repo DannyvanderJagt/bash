@@ -18,7 +18,11 @@ BashCenter.exec('ls', (command) => {
 });
 
 // Create a process.
-let p1 = BashCenter.create({});
+let p1 = BashCenter.process({
+    command: 'node', // default: bash
+    arguments: ['test.js'], // default: []
+    detached: true, // default: false
+});
 
 // Listen for any output. (All the output will be emitted line by line)
 p1.on('data', (line) => {
@@ -36,9 +40,3 @@ p1.exec('ls');
 
 ## Owner
 [Danny van der Jagt](https://github.com/DannyvanderJagt)
-
-
-## Todo:
-- [ ] Clean up the code.
-- [ ] Add comments
-- [ ] Add docs.

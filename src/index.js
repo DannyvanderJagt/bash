@@ -28,7 +28,7 @@ let BashCenter = {
      * @param  {Object} settings - The settings for the new process.
      * @return {Object} Project
      */
-    create(settings = {}){
+    process(settings){
         let pr = new Process(settings);
         this._processes[pr.id] = pr; 
         return pr;
@@ -36,10 +36,13 @@ let BashCenter = {
     
     /**
      * Kill all the current processes.
-     * @return {[type]} [description]
+     * @param {Boolean} detached - Kill all the detached process too.
      */
-    killAll(){
+    killAll(detached = true){
         for(let id in this._processes){
+            if(!detached && this._processes.settings && this._processes.settings.detached === true){
+                return;
+            }
             this._processes[id].kill();
         }
     },
@@ -84,6 +87,7 @@ export default BashCenter;
 process.on('exit', function(code) {
     BashCenter.killAll();
 });
+
 process.on('SIGINT', function() {
   process.exit();
 });

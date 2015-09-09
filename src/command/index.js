@@ -41,7 +41,7 @@ class Command extends EventEmitter{
      */
     _create(command){
         return [
-            'echo start:$$',
+            'echo start',
             command,
             'sleep .1', // A hack to enable to end statement.
             'echo end \n',
@@ -80,6 +80,10 @@ class Command extends EventEmitter{
         this.emit('end');
     }
     
+    isExecuting(){
+        return this.executing;
+    }
+    
     /**
      * Add a line to the command results.
      * @name addToResult
@@ -91,15 +95,11 @@ class Command extends EventEmitter{
         }
         
         // Get the process id.
-        if(line.match(/start\:[0-9]*/)){
-            let pid = line.match(/start\:([0-9]*)/);
-            if(pid && pid[1]){
-                this.pid = pid[1];
-                this.emit('pid', this.pid);
-            }
+        if(!this.isExecuting() && line === 'start'){
             this.start();
             return false;
         }
+        
         if(!this.executing){
             return false;
         }
@@ -169,5 +169,14 @@ class Command extends EventEmitter{
             executingTime: this.endTime - this.startTime
         };
     }
+    
+    /**
+     * Set the pid of the process where this command is executed.
+     * @param {Number} pid - The pid of the process.
+     */
+    setPid(pid){
+        this.pid = pid;
+    }
+    
 }
 export default Command;

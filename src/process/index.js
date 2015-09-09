@@ -16,11 +16,13 @@ class Process extends EventEmitter{
      * @name constructor
      * @param  {Object} settings - The settings.
      */
-    constructor(settings){
+    constructor(settings = {}){
         super();
         this.id = uid();
         this.settings = {
-            stream: settings.stream || true
+            command: settings.command || 'bash', 
+            arguments: settings.arguments || [],
+            detached: settings.detached || false,
         };
         
         // The command that is executed.
@@ -29,8 +31,22 @@ class Process extends EventEmitter{
         this.available = false;
 
         // Create a new bash.
-        this.shell = spawn('bash', {detached: true});
-    
+        try{
+            this.shell = spawn(
+                this.settings.command,
+                this.settings.arguments,
+                {
+                    detached: this.settings.detached
+                }
+            );
+        }catch(error){
+            this.emit('error', error);
+            return false;
+        }
+            
+        // Set the pid.
+        this.pid = this.shell.pid;
+
         // Listen for all the events.
         this.shell.stderr.on('data', this._onCommandError.bind(this));
         this.shell.stdout.on('data', this._onData.bind(this));
@@ -76,6 +92,9 @@ class Process extends EventEmitter{
      * @param  ?{Function} callback - The callback.
      */
     exec(command, callback){
+        if(!this.shell){
+            return false;
+        }
         if(util.isArray(command)){
             command.forEach((command) => {
                 this.exec(command, callback);
@@ -98,9 +117,6 @@ class Process extends EventEmitter{
         if(callback){
             this.command.addCallback(callback);
         }
-        
-        // Chain the pid event.
-        this.command.on('pid', this.emit.bind(this, 'pid'));
         
         // Execute the command.
         this.emit('executing', command);
@@ -160,7 +176,7 @@ class Process extends EventEmitter{
                 this.command.addToResult(line);
             }
             
-            if(this.settings.stream){
+            if(line){
                 this.emit('data', line);
             }
         });
@@ -195,7 +211,7 @@ class Process extends EventEmitter{
      * @param  {String} code - The exit code.
      */
     _onExit(code){
-        this.emit('exit', code);
+        // this.emit('exit', code);
     }
     
     /**
