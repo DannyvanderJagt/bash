@@ -1,6 +1,6 @@
 {
-  "name": "bash-center",
-  "version": "0.1.2",
+  "name": "bash",
+  "version": "0.2.0",
   "description": "",
   "main": "src/index.js",
   "es6": "src/index.js",
