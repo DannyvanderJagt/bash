@@ -50,9 +50,9 @@ class Process extends EventEmitter{
         // Listen for all the events.
         this.shell.stderr.on('data', this._onCommandError.bind(this));
         this.shell.stdout.on('data', this._onData.bind(this));
-        this.shell.on('exit', this._onExit);
-        this.shell.on('close', this._onExit);
-        this.shell.on('SIGTERM', this._onExit);
+        this.shell.on('exit', this._onExit.bind(this));
+        this.shell.on('close', this._onExit.bind(this));
+        this.shell.on('SIGTERM', this._onExit.bind(this));
         
         this.emit('created');
         this._setAvailable(true);
@@ -211,7 +211,7 @@ class Process extends EventEmitter{
      * @param  {String} code - The exit code.
      */
     _onExit(code){
-        // this.emit('exit', code);
+        this.emit('exit', code);
     }
     
     /**

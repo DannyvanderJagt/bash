@@ -1,5 +1,5 @@
 import uid from 'uid';
-import {exec} from 'child_process';
+import ChildProcess from 'child_process';
 import Process from './process';
 import Command from './command';
 import util from 'util';
@@ -8,7 +8,7 @@ import util from 'util';
  * Bash Center.
  * @namespace bashcenter
  */
-let BashCenter = {
+let Bash = {
     /**
      * @var {Object} _processes - All the running processes.
      */
@@ -19,7 +19,7 @@ let BashCenter = {
      * @name list
      * @return {Object} A list of all the processes.
      */
-    list(){
+    getProcesses(){
         return this._processes;
     },
     
@@ -32,6 +32,21 @@ let BashCenter = {
         let pr = new Process(settings);
         this._processes[pr.id] = pr; 
         return pr;
+    },
+    
+    /* 
+        Kill all the process (except the detached ones) when the node process exists
+        to prevent useless running processes.
+    */
+    killProcessesOnExit(detached = false){
+        process.on('exit', function(code) {
+            BashCenter.killAll(detached);
+        });
+
+        process.on('SIGINT', function() {
+            process.exit();
+        });
+        return true;
     },
     
     /**
@@ -58,7 +73,7 @@ let BashCenter = {
             command.addCallback(callback);
         }
 
-        let p = exec(command.executingLine, (error, stderr, stdout) => {
+        let p = ChildProcess.exec(command.executingLine, (error, stderr, stdout) => {
             if(error){
                 command.addError(error);
             }
@@ -75,19 +90,70 @@ let BashCenter = {
                 });
             }
         });
+    },
+    /**
+     * Execute a command sync.
+     * @param  {String} command - The command.
+     * @return {[type]}         [description]
+     */
+    execSync(command, args){
+        let result = ChildProcess.spawnSync(command,args,{encoding:'utf-8'});
+        let data = {
+            error: null,
+            output: null
+        };
+        if(result.error){
+            data.error = result.error.message;
+        }
+        
+        if(result.output){
+            data.output = result.output.join('');
+        }
+        
+        return data;
+    },
+    
+    isPortFree(port){
+        let result = Bash.execSync('lsof',['-i:'+port]);
+        if(result.output === ''){
+            return true;
+        }
+        return false;
+    },
+    
+    isPIDFree(pid){
+        let result = Bash.execSync('ps', ['-p ' + pid]);
+        if(result.output === ''){
+            return true;
+        }
+        
+        let lines = result.output.split('\n');
+        if(lines.length === 2){
+            return true;
+        }
+        return false;
+    },
+    
+    getPIDByPort(port){
+        let result = Bash.execSync('lsof',['-i:'+port]);
+
+        if(result.output === null){
+            return true;
+        }
+        
+        let lines = result.output.split('\n');
+        if(lines.length <= 2){
+            return false;
+        }
+        
+        let args = lines[1].split(/\s+/);
+        
+        if(args[1]){
+            return Number(args[1]);
+        }
+         
+        return false;
     }
 };
 
-export default BashCenter;
-
-/* 
-    Kill all the process (except the detached ones) when the node process exists
-    to prevent useless running processes.
-*/
-process.on('exit', function(code) {
-    BashCenter.killAll(false);
-});
-
-process.on('SIGINT', function() {
-  process.exit();
-});
+export default Bash;
