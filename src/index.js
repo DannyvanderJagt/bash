@@ -81,11 +81,11 @@ let BashCenter = {
 export default BashCenter;
 
 /* 
-    Kill all the process when the node process exists
+    Kill all the process (except the detached ones) when the node process exists
     to prevent useless running processes.
 */
 process.on('exit', function(code) {
-    BashCenter.killAll();
+    BashCenter.killAll(false);
 });
 
 process.on('SIGINT', function() {
