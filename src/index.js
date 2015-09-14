@@ -40,7 +40,7 @@ let BashCenter = {
      */
     killAll(detached = true){
         for(let id in this._processes){
-            if(!detached && this._processes.settings && this._processes.settings.detached === true){
+            if(!detached && (this._processes[id].settings && this._processes[id].settings.detached === true)){
                 return;
             }
             this._processes[id].kill();
