@@ -121,7 +121,7 @@ let Bash = {
         _command.start();
         
         // Execute.
-        let result = ChildProcess.spawnSync(_command.command,_command.args,{encoding:'utf-8'});
+        let result = ChildProcess.spawnSync(_command.command,_command.arguments,{encoding:'utf-8'});
         
         // Stop.
         _command.stop();
@@ -145,7 +145,8 @@ let Bash = {
      */
     isPortFree(port){
         let result = Bash.execSync('lsof', ['-i:'+port]);
-        if(result.output === ''){
+
+        if(result.output && result.output[0] === ''){
             return true;
         }
         return false;
@@ -159,15 +160,16 @@ let Bash = {
      */
     isPIDFree(pid){
         let result = Bash.execSync('ps', ['-p ' + pid]);
-        if(result.output === ''){
+        if(result.output && result.output[0] === ''){
             return true;
         }
-        
-        let lines = result.output.split('\n');
-        if(lines.length === 2){
-            return true;
+
+        let lines = result.output[0].split('\n');
+        console.log(lines);
+        if(lines.length > 2){
+            return false;
         }
-        return false;
+        return true;
     },
     
     /**
@@ -179,11 +181,11 @@ let Bash = {
     getPIDByPort(port){
         let result = Bash.execSync('lsof',['-i:'+port]);
 
-        if(result.output === null){
-            return true;
+        if(result.output && result.output[0] === ''){
+            return;
         }
         
-        let lines = result.output.split('\n');
+        let lines = result.output[0].split('\n');
         if(lines.length <= 2){
             return;
         }
