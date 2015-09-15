@@ -1,7 +1,6 @@
 import {spawn} from 'child_process';
 import {EventEmitter} from 'events';
 import Command from '../command';
-import uid from 'uid';
 import util from 'util';
 
 /**
@@ -18,7 +17,7 @@ class Process extends EventEmitter{
      */
     constructor(settings = {}){
         super();
-        this.id = uid();
+        
         this.settings = {
             command: settings.command || 'bash', 
             arguments: settings.arguments || [],
@@ -54,7 +53,6 @@ class Process extends EventEmitter{
         this.shell.on('close', this._onExit.bind(this));
         this.shell.on('SIGTERM', this._onExit.bind(this));
         
-        this.emit('created');
         this._setAvailable(true);
     }
     
